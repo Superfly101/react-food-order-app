@@ -6,16 +6,16 @@ import MealItem from "./MealItem/MealItem";
 const AvailableMeals = () => {
   const [meals, setMeals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState();
+  const [httpError, setHttpError] = useState();
 
   const fetchMeals = async () => {
     try {
       const response = await fetch(
-        "https://react-http-6ae41-default-rtdb.firebaseio.com/meals.json"
+        "https://react-http-6ae41-default-rtdb.firebaseio.com/meals"
       );
 
       if (!response.ok) {
-        throw new Error("Request Failed");
+        throw new Error("Something went wrong!");
       }
 
       const data = await response.json();
@@ -25,20 +25,38 @@ const AvailableMeals = () => {
 
       const loadMeals = [];
 
-      for (const meal in data) {
-        loadMeals.push(data[meal]);
+      for (const key in data) {
+        loadMeals.push({ id: key, ...data[key] });
       }
+
       setMeals(loadMeals);
       setIsLoading(false);
     } catch (error) {
-      console.log(error.message || "Something went wrong!");
-      setError(error);
+      setIsLoading(false);
+      console.log(error.message);
+      setHttpError(error.message);
     }
   };
 
   useEffect(() => {
     fetchMeals();
   }, []);
+
+  if (isLoading) {
+    return (
+      <section className={classes.MealsLoading}>
+        <p>Loading...</p>
+      </section>
+    );
+  }
+
+  if (httpError) {
+    return (
+      <section className={classes.MealsError}>
+        <p>{httpError}</p>
+      </section>
+    );
+  }
 
   const mealsList = meals.map((meal) => (
     <MealItem
@@ -50,15 +68,15 @@ const AvailableMeals = () => {
     />
   ));
 
-  let content = !error && isLoading ? <p>Loading Meals...</p> : mealsList;
-  if (error) {
-    content = <p>Error Loading Meals</p>;
-  }
+  // let content = !error && isLoading ? <p>Loading Meals...</p> : mealsList;
+  // if (error) {
+  //   content = <p>Error Loading Meals</p>;
+  // }
 
   return (
     <section className={classes.meals}>
       <Card>
-        <ul>{content}</ul>
+        <ul>{mealsList}</ul>
       </Card>
     </section>
   );
